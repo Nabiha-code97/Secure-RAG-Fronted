@@ -5,7 +5,6 @@ import { verifyResetOTP, resendOTP } from '../../services/authService'
 
 const RESEND_COOLDOWN = 60
 
-
 const OTPVerifyForm = () => {
   const [digits, setDigits] = useState(['', '', '', ''])
   const [loading, setLoading] = useState(false)
