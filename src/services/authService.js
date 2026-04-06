@@ -1,6 +1,10 @@
+import { logger } from '../utils/logger'
+
 const BASE_URL =
   import.meta.env.VITE_API_URL ||
   'https://securerag-backend-new.onrender.com/api/v1'
+
+logger.info(`🚀 API Endpoint: ${BASE_URL}`)
 
 // 🔹 Generic request handler
 const request = async (endpoint, method = 'POST', body, token, isForm = false) => {
@@ -24,19 +28,42 @@ const request = async (endpoint, method = 'POST', body, token, isForm = false) =
     }
   }
 
-  console.log(`[REQUEST] ${method} ${BASE_URL}${endpoint}`, body || '')
+  const fullUrl = `${BASE_URL}${endpoint}`
+  logger.request(method, endpoint, body || null)
 
-  const res = await fetch(`${BASE_URL}${endpoint}`, options)
-  const data = await res.json()
+  try {
+    const startTime = performance.now()
+    const res = await fetch(fullUrl, options)
+    const endTime = performance.now()
+    const duration = (endTime - startTime).toFixed(2)
 
-  console.log(`[RESPONSE] ${method} ${endpoint} → status: ${res.status}`, data)
+    let data
 
-  if (!res.ok) {
-    console.error(`[ERROR] ${method} ${endpoint} → ${res.status}`, data)
-    throw new Error(data.message || 'Request failed')
+    try {
+      data = await res.json()
+    } catch (parseError) {
+      logger.error('[PARSE ERROR]', parseError, { status: res.status, body: await res.text() })
+      throw new Error(`Server returned invalid response (${res.status})`)
+    }
+
+    logger.response(method, endpoint, res.status, data)
+    logger.info(`⏱️  Request took ${duration}ms`)
+
+    if (!res.ok) {
+      logger.error(`API Error ${res.status}`, data.detail || data.message || 'Request failed', {
+        status: res.status,
+        endpoint,
+        method,
+        response: data
+      })
+      throw new Error(data.message || data.detail || 'Request failed')
+    }
+
+    return data
+  } catch (err) {
+    logger.error('FETCH ERROR', err, { method, endpoint: fullUrl })
+    throw err
   }
-
-  return data
 }
 
 //////////////////////////////////////////////////////
@@ -55,12 +82,20 @@ export const ping = () =>
 //////////////////////////////////////////////////////
 
 // ✅ Signup
-export const signupUser = ({ name, email, password }) =>
-  request('/auth/signup', 'POST', {
+export const signupUser = ({ name, email, password }) => {
+  console.log('[SIGNUP] Attempting signup with:', { name, email })
+
+  
+  return request('/auth/signup', 'POST', {
     full_name: name,
     email,
     password,
+  }).catch(err => {
+    console.error('[SIGNUP ERROR]', err)
+    throw err
   })
+
+}
 
 // ✅ Email Verification OTP
 export const verifyEmail = ({ email, otp }) =>

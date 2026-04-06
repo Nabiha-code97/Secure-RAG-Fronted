@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { signupUser } from '../../services/authService'
+import { logger } from '../../utils/logger'
 
 const EyeIcon = ({ open }) =>
   open ? (
@@ -35,7 +36,8 @@ const validatePassword = (val) => {
   if (!val) return 'Password is required'
   if (val.length < 8) return 'Must be at least 8 characters'
   if (!/[A-Z]/.test(val)) return 'Must contain at least 1 uppercase letter'
-  if (!/[^a-zA-Z0-9]/.test(val)) return 'Must contain at least 1 special character'
+  if (!/[a-z]/.test(val)) return 'Must contain at least 1 lowercase letter'
+  if (!/[0-9]/.test(val)) return 'Must contain at least 1 digit'
   return ''
 }
 
@@ -77,13 +79,26 @@ const SignupForm = () => {
     // Remove empty errors
     Object.keys(errs).forEach((k) => { if (!errs[k]) delete errs[k] })
     setErrors(errs)
-    if (Object.keys(errs).length > 0) return
+    if (Object.keys(errs).length > 0) {
+      logger.warning('Validation failed', errs)
+      return
+    }
 
     setLoading(true)
+    logger.section('SIGNUP ATTEMPT')
+    logger.info('Submitting signup form', {
+      name: name.trim(),
+      email: email.trim(),
+      passwordLength: password.length
+    })
+
     try {
-      await signupUser({ name: name.trim(), email: email.trim(), password })
+      const response = await signupUser({ name: name.trim(), email: email.trim(), password })
+      logger.success('Signup completed successfully', response)
+      toast.success('Account created! Check your email for verification code.')
       navigate('/verify-email', { state: { email: email.trim() } })
     } catch (err) {
+      logger.error('Signup failed', err, { email: email.trim() })
       toast.error(err.message || 'Signup failed. Please try again.')
     } finally {
       setLoading(false)
@@ -138,7 +153,7 @@ const SignupForm = () => {
           <div className="relative">
             <input
               type={showPassword ? 'text' : 'password'}
-              placeholder="Min 8 chars, 1 uppercase, 1 special"
+              placeholder="Min 8 chars, 1 uppercase, 1 lowercase, 1 digit"
               value={password}
               onChange={handlePasswordChange}
               className={`${inputClass('password')} pr-11`}

@@ -11,6 +11,7 @@ import Workspace from '../pages/onboarding/Workspace'
 import Documents from '../pages/onboarding/Documents'
 import Upload from '../pages/onboarding/Upload'
 import Plan from '../pages/onboarding/Plan'
+import NetworkTest from '../pages/NetworkTest'
 
 const AppRoutes = () => {
   return (
@@ -27,6 +28,7 @@ const AppRoutes = () => {
       <Route path="/onboarding/documents" element={<Documents />} />
       <Route path="/onboarding/upload" element={<Upload />} />
       <Route path="/onboarding/plan" element={<Plan />} />
+      <Route path="/test" element={<NetworkTest />} />
       <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
   )
