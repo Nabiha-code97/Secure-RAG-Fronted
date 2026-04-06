@@ -57,9 +57,14 @@ const EmailVerifyForm = () => {
     try {
       const data = await verifyEmail({ email, otp: code })
       console.log('verifyEmail response:', data)
-      if (data.access_token || data.token) setToken(data.access_token || data.token)
-      toast.success('Email verified!')
-      navigate('/onboarding/category', { state: { email } })
+      // Backend returns 'onboarding_token' for email verification
+      if (data.onboarding_token) {
+        setToken(data.onboarding_token)
+        toast.success('Email verified! Continue to next step.')
+        navigate('/onboarding/category', { state: { email } })
+      } else {
+        throw new Error('No onboarding token in response')
+      }
     } catch (err) {
       toast.error(err.message || 'Invalid or expired code.')
       setDigits(['', '', '', ''])
