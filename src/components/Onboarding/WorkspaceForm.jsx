@@ -14,6 +14,7 @@ const WorkspaceForm = () => {
   const navigate = useNavigate()
   const location = useLocation()
   const prevState = location.state || {}
+  const { token } = useAppContext()
 
   const validate = (value) => {
     if (!value.trim()) return 'Workspace name is required'
@@ -40,7 +41,7 @@ const WorkspaceForm = () => {
     setError('')
     setLoading(true)
     try {
-      await saveWorkspace({ email: prevState.email, workspaceName: workspaceName.trim() })
+      await saveWorkspace({ workspaceName: workspaceName.trim() }, token)
     } catch (apiErr) {
       toast.error(apiErr.message || 'Failed to save workspace.')
       setLoading(false)
