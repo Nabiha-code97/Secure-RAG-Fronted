@@ -60,16 +60,19 @@ const PlanSelection = () => {
   const navigate = useNavigate()
   const location = useLocation()
   const state = location.state || {}
+  const { token, setToken } = useAppContext()
 
   const handleSelectPlan = async (planName) => {
     setLoading(planName)
     try {
-      await selectPlan({ email: state.email, plan: planName })
-    } catch (err) {
-      // Non-blocking: proceed even if API fails during onboarding
-    } finally {
-      setLoading(null)
+      const data = await selectPlan({ plan: planName }, token)
+      // Store the access token from plan selection response
+      if (data.access_token) setToken(data.access_token)
+      toast.success('Plan selected successfully!')
       navigate('/dashboard')
+    } catch (err) {
+      toast.error(err.message || 'Failed to select plan')
+      setLoading(null)
     }
   }
 
