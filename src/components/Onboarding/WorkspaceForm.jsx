@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import toast from 'react-hot-toast'
+import { useAppContext } from '../../context/AuthContext'
 import { saveWorkspace } from '../../services/authService'
 
 const MAX_CHARS = 50

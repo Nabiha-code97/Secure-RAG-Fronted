@@ -47,10 +47,15 @@ const LoginForm = () => {
     setLoading(true)
     try {
       const data = await loginUser({ email, password })
-      if (data.access_token || data.token) setToken(data.access_token || data.token)
-      if (data.user) setUser(data.user)
-      toast.success('Signed in successfully!')
-      navigate('/dashboard')
+      // Backend returns 'access_token' in the response
+      if (data.access_token) {
+        setToken(data.access_token)
+        setUser({ email })
+        toast.success('Signed in successfully!')
+        navigate('/dashboard')
+      } else {
+        throw new Error('No access token in response')
+      }
     } catch (err) {
       toast.error(err.message || 'Login failed')
     } finally {

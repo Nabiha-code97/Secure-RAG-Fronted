@@ -116,7 +116,7 @@ export const resetPassword = ({ email, otp, password }) =>
 // 🏢 ONBOARDING
 //////////////////////////////////////////////////////
 
-// ✅ Organization Info (Protected)
+// ✅ Organization Info (Protected) - requires onboarding token
 export const saveOrganization = ({ category, employeeCount }, token) =>
   request(
     '/auth/organization',
@@ -128,19 +128,27 @@ export const saveOrganization = ({ category, employeeCount }, token) =>
     token
   )
 
-// ✅ Workspace
-export const saveWorkspace = ({ email, workspaceName }) =>
-  request('/auth/workspace', 'POST', {
-    email,
-    workspace_name: workspaceName,
-  })
+// ✅ Workspace (Protected) - requires onboarding token
+export const saveWorkspace = ({ workspaceName }, token) =>
+  request(
+    '/auth/workspace',
+    'POST',
+    {
+      workspace_name: workspaceName,
+    },
+    token
+  )
 
-// ✅ Select Plan
-export const selectPlan = ({ email, plan }) =>
-  request('/auth/select-plan', 'POST', {
-    email,
-    plan_name: plan.toLowerCase(),
-  })
+// ✅ Select Plan (Protected) - requires onboarding token
+export const selectPlan = ({ plan }, token) =>
+  request(
+    '/auth/select-plan',
+    'POST',
+    {
+      plan_name: plan.toLowerCase(),
+    },
+    token
+  )
 
 //////////////////////////////////////////////////////
 // 📄 DOCUMENTS
