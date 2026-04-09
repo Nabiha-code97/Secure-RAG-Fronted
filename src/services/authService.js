@@ -77,7 +77,6 @@ export const healthCheck = () =>
   fetch('https://securerag-backend-new.onrender.com/health')
     .then(res => res.json())
 
-    
 export const ping = () =>
   request('/ping', 'GET')
 
