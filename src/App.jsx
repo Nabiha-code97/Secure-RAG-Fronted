@@ -7,7 +7,6 @@ const App = () => {
 
 
 
-
       <Toaster position="top-right" />
       <AppRoutes />
     </>
