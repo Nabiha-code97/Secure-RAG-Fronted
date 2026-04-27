@@ -70,11 +70,22 @@ const CategoryForm = () => {
     setLoading(true)
     try {
       console.log('Saving organization:', { category, employeeCount, token: token?.slice(0, 10) + '...' })
-      await saveOrganization({ category, employeeCount }, token)
+      const result = await saveOrganization({ category, employeeCount }, token)
+      console.log('Organization saved successfully:', result)
       navigate('/onboarding/workspace', { state: { email, category, employeeCount } })
     } catch (err) {
       console.error('Organization save error:', err)
-      toast.error(err.message || 'Failed to save organization info.')
+      const errorMsg = err.message || 'Failed to save organization info.'
+
+      // Helpful error messages
+      if (errorMsg.includes('401') || errorMsg.includes('Unauthorized')) {
+        toast.error('Your session has expired. Please verify your email again.')
+      } else if (errorMsg.includes('Network error') || errorMsg.includes('Unable to reach')) {
+        toast.error('Backend server is not responding. Please try again in a moment.')
+      } else {
+        toast.error(errorMsg)
+      }
+
       setLoading(false)
     }
   }

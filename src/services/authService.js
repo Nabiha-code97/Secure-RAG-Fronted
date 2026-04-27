@@ -14,6 +14,7 @@ const request = async (endpoint, method = 'POST', body, token, isForm = false) =
   const options = {
     method,
     headers: {},
+    timeout: 30000, // 30 second timeout
   }
 
   // 🔐 Token (for protected routes)
@@ -53,18 +54,31 @@ const request = async (endpoint, method = 'POST', body, token, isForm = false) =
     logger.info(`⏱️  Request took ${duration}ms`)
 
     if (!res.ok) {
-      logger.error(`API Error ${res.status}`, data.detail || data.message || 'Request failed', {
+      const errorMsg = data.detail || data.message || `HTTP ${res.status}`
+      logger.error(`API Error ${res.status}`, errorMsg, {
         status: res.status,
         endpoint,
         method,
         response: data
       })
-      throw new Error(data.message || data.detail || 'Request failed')
+      throw new Error(errorMsg)
     }
 
     return data
   } catch (err) {
-    logger.error('FETCH ERROR', err, { method, endpoint: fullUrl })
+    // Network error (CORS, timeout, server down, etc.)
+    if (err instanceof TypeError) {
+      logger.error('NETWORK ERROR', err.message, {
+        method,
+        endpoint: fullUrl,
+        hint: 'Backend server may be down or CORS is blocked'
+      })
+      throw new Error(
+        `Network error: Unable to reach ${BASE_URL}. Check if the backend is running.`
+      )
+    }
+
+    logger.error('FETCH ERROR', err.message, { method, endpoint: fullUrl })
     throw err
   }
 }
