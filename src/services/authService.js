@@ -54,12 +54,12 @@ const request = async (endpoint, method = 'POST', body, token, isForm = false) =
     logger.info(`⏱️  Request took ${duration}ms`)
 
     if (!res.ok) {
-      const errorMsg = data.detail || data.message || `HTTP ${res.status}`
+      const errorMsg = data.detail || data.message || data.error || `HTTP ${res.status}`
       logger.error(`API Error ${res.status}`, errorMsg, {
         status: res.status,
         endpoint,
         method,
-        response: data
+        fullResponse: data
       })
       throw new Error(errorMsg)
     }
