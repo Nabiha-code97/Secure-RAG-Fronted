@@ -9,77 +9,117 @@ const BASE_URL =
 
 logger.info(`🚀 API Endpoint: ${BASE_URL}`)
 
-// 🔹 Generic request handler
+// 🔹 Generic request handler with retry logic
 const request = async (endpoint, method = 'POST', body, token, isForm = false) => {
-  const options = {
-    method,
-    headers: {},
-    timeout: 30000, // 30 second timeout
-  }
+  const maxRetries = 3
+  const retryDelay = 1000 // 1 second initial delay
 
-  // 🔐 Token (for protected routes)
-  if (token) {
-    options.headers['Authorization'] = `Bearer ${token}`
-  }
-
-  // 📦 Body handling
-  if (body) {
-    if (isForm) {
-      options.body = body
-    } else {
-      options.headers['Content-Type'] = 'application/json'
-      options.body = JSON.stringify(body)
-    }
-  }
-
-  const fullUrl = `${BASE_URL}${endpoint}`
-  logger.request(method, endpoint, body || null)
-
-  try {
-    const startTime = performance.now()
-    const res = await fetch(fullUrl, options)
-    const endTime = performance.now()
-    const duration = (endTime - startTime).toFixed(2)
-
-    let data
-
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
-      data = await res.json()
-    } catch (parseError) {
-      logger.error('[PARSE ERROR]', parseError, { status: res.status, body: await res.text() })
-      throw new Error(`Server returned invalid response (${res.status})`)
-    }
-
-    logger.response(method, endpoint, res.status, data)
-    logger.info(`⏱️  Request took ${duration}ms`)
-
-    if (!res.ok) {
-      const errorMsg = data.detail || data.message || data.error || `HTTP ${res.status}`
-      logger.error(`API Error ${res.status}`, errorMsg, {
-        status: res.status,
-        endpoint,
+      const options = {
         method,
-        fullResponse: data
-      })
-      throw new Error(errorMsg)
-    }
+        headers: {},
+        timeout: 30000, // 30 second timeout
+      }
 
-    return data
-  } catch (err) {
-    // Network error (CORS, timeout, server down, etc.)
-    if (err instanceof TypeError) {
-      logger.error('NETWORK ERROR', err.message, {
-        method,
-        endpoint: fullUrl,
-        hint: 'Backend server may be down or CORS is blocked'
-      })
-      throw new Error(
-        `Network error: Unable to reach ${BASE_URL}. Check if the backend is running.`
-      )
-    }
+      // 🔐 Token (for protected routes)
+      if (token) {
+        options.headers['Authorization'] = `Bearer ${token}`
+      }
 
-    logger.error('FETCH ERROR', err.message, { method, endpoint: fullUrl })
-    throw err
+      // 📦 Body handling
+      if (body) {
+        if (isForm) {
+          options.body = body
+        } else {
+          options.headers['Content-Type'] = 'application/json'
+          options.body = JSON.stringify(body)
+        }
+      }
+
+      const fullUrl = `${BASE_URL}${endpoint}`
+      if (attempt === 0) {
+        logger.request(method, endpoint, body || null)
+      } else {
+        logger.info(`🔄 Retry attempt ${attempt}/${maxRetries} for ${method} ${endpoint}`)
+      }
+
+      const startTime = performance.now()
+      const res = await fetch(fullUrl, options)
+      const endTime = performance.now()
+      const duration = (endTime - startTime).toFixed(2)
+
+      let data
+
+      try {
+        data = await res.json()
+      } catch (parseError) {
+        logger.error('[PARSE ERROR]', parseError, { status: res.status, body: await res.text() })
+        throw new Error(`Server returned invalid response (${res.status})`)
+      }
+
+      logger.response(method, endpoint, res.status, data)
+      logger.info(`⏱️  Request took ${duration}ms`)
+
+      // Success
+      if (res.ok) {
+        return data
+      }
+
+      // Don't retry on 4xx errors (validation, auth, etc.)
+      if (res.status >= 400 && res.status < 500) {
+        const errorMsg = data.detail || data.message || data.error || `HTTP ${res.status}`
+        logger.error(`API Error ${res.status}`, errorMsg, {
+          status: res.status,
+          endpoint,
+          method,
+          fullResponse: data
+        })
+        throw new Error(errorMsg)
+      }
+
+      // Retry on 5xx errors
+      if (res.status >= 500) {
+        if (attempt < maxRetries) {
+          const delay = retryDelay * Math.pow(2, attempt) // Exponential backoff
+          logger.warn(`Server error ${res.status}, retrying in ${delay}ms...`)
+          await new Promise(resolve => setTimeout(resolve, delay))
+          continue // Retry
+        }
+        const errorMsg = data.detail || data.message || `Server error (${res.status})`
+        logger.error(`API Error ${res.status}`, errorMsg, {
+          status: res.status,
+          endpoint,
+          method,
+          fullResponse: data
+        })
+        throw new Error(errorMsg)
+      }
+    } catch (err) {
+      // Network error (CORS, timeout, server down, etc.)
+      if (err instanceof TypeError) {
+        if (attempt < maxRetries) {
+          const delay = retryDelay * Math.pow(2, attempt)
+          logger.warn(`Network error, retrying in ${delay}ms...`)
+          await new Promise(resolve => setTimeout(resolve, delay))
+          continue // Retry
+        }
+        logger.error('NETWORK ERROR', err.message, {
+          method,
+          endpoint,
+          hint: 'Backend server may be down or CORS is blocked'
+        })
+        throw new Error(
+          `Network error: Unable to reach ${BASE_URL}. Check if the backend is running.`
+        )
+      }
+
+      // Non-retryable errors
+      if (attempt === 0) {
+        logger.error('FETCH ERROR', err.message, { method, endpoint })
+      }
+      throw err
+    }
   }
 }
 
