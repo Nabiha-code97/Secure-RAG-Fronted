@@ -251,6 +251,10 @@ export const selectPlan = ({ plan, billingCycle }, token) =>
 export const getSampleDocs = (token) =>
   request('/documents/samples', 'GET', null, token)
 
+// ✅ Get Sample Documents by Category (unprotected, for onboarding)
+export const getSampleDocsByCategory = (category) =>
+  request(`/auth/sample-documents?category=${encodeURIComponent(category)}`, 'GET', null, null)
+
 // ✅ Upload Documents (Protected)
 export const uploadDocuments = async (files, token) => {
   const formData = new FormData()
@@ -266,6 +270,17 @@ export const selectSampleDoc = (docId, token) =>
     'POST',
     {
       sample_document_id: docId,
+    },
+    token
+  )
+
+// ✅ Select Platform Sample Documents (Protected)
+export const selectPlatformSampleDocs = (sampleDocIds, token) =>
+  request(
+    '/documents/select-platform-samples',
+    'POST',
+    {
+      sample_document_ids: sampleDocIds,
     },
     token
   )

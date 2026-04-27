@@ -1,35 +1,8 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import toast from 'react-hot-toast'
-import { selectSampleDoc } from '../../services/authService'
+import { selectPlatformSampleDocs, getSampleDocsByCategory } from '../../services/authService'
 import { useAppContext } from '../../context/AuthContext'
-
-const SAMPLE_DOCS = {
-  'Finance & Banking': [
-    { id: 'refund', title: 'Refund Policy', desc: 'Standard refund & return policy template for finance teams', pages: 2 },
-    { id: 'kyc', title: 'KYC Guidelines', desc: 'Know Your Customer compliance document', pages: 4 },
-    { id: 'loan', title: 'Loan FAQ', desc: 'Frequently asked questions about loan products', pages: 3 },
-    { id: 'account', title: 'Account Terms', desc: 'Terms and conditions for account holders', pages: 4 },
-  ],
-  'Healthcare': [
-    { id: 'hipaa', title: 'HIPAA Guidelines', desc: 'Health data privacy and compliance guide', pages: 6 },
-    { id: 'patient', title: 'Patient FAQ', desc: 'Frequently asked questions for patients', pages: 3 },
-    { id: 'consent', title: 'Consent Form', desc: 'Standard patient consent form template', pages: 2 },
-    { id: 'billing', title: 'Billing Policy', desc: 'Medical billing and payment policy', pages: 4 },
-  ],
-  'Government & NGO': [
-    { id: 'proc', title: 'Procurement Policy', desc: 'Standard government procurement guidelines', pages: 8 },
-    { id: 'grant', title: 'Grant Guidelines', desc: 'NGO grant application guidelines', pages: 5 },
-    { id: 'comp', title: 'Compliance Doc', desc: 'Regulatory compliance requirements', pages: 4 },
-    { id: 'pfaq', title: 'Public Services FAQ', desc: 'FAQs about public services', pages: 3 },
-  ],
-  'Other': [
-    { id: 'handbook', title: 'Employee Handbook', desc: 'Standard employee policies and procedures', pages: 10 },
-    { id: 'privacy', title: 'Privacy Policy', desc: 'Data privacy and protection policy', pages: 3 },
-    { id: 'terms', title: 'Service Terms', desc: 'Terms of service agreement', pages: 5 },
-    { id: 'ops', title: 'Operations Manual', desc: 'Standard operating procedures', pages: 7 },
-  ],
-}
 
 const RadioCircle = ({ selected }) => (
   <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${selected ? 'border-[#1a5c6b]' : 'border-gray-300'}`}>
@@ -41,13 +14,29 @@ const DocumentsChoice = () => {
   const [choice, setChoice] = useState(null) // 'yes' | 'no'
   const [selectedSamples, setSelectedSamples] = useState([])
   const [loading, setLoading] = useState(false)
+  const [sampleDocs, setSampleDocs] = useState([])
+  const [fetchingDocs, setFetchingDocs] = useState(false)
   const navigate = useNavigate()
   const location = useLocation()
   const state = location.state || {}
   const { category } = state
   const { token } = useAppContext()
 
-  const sampleDocs = SAMPLE_DOCS[category] || SAMPLE_DOCS['Other']
+  useEffect(() => {
+    if (category) {
+      setFetchingDocs(true)
+      getSampleDocsByCategory(category)
+        .then((res) => {
+          setSampleDocs(res.documents || [])
+        })
+        .catch((err) => {
+          console.error('Failed to fetch sample documents:', err)
+          toast.error('Failed to load sample documents')
+          setSampleDocs([])
+        })
+        .finally(() => setFetchingDocs(false))
+    }
+  }, [category])
 
   const toggleSample = (id) => {
     setSelectedSamples((prev) =>
@@ -64,7 +53,7 @@ const DocumentsChoice = () => {
     } else {
       setLoading(true)
       try {
-        await Promise.all(selectedSamples.map((docId) => selectSampleDoc(docId, token)))
+        await selectPlatformSampleDocs(selectedSamples, token)
       } catch (err) {
         toast.error(err.message || 'Failed to select sample documents.')
         setLoading(false)
@@ -141,34 +130,44 @@ const DocumentsChoice = () => {
             Select documents to add to your workspace
           </p>
 
-          <div className="grid grid-cols-2 gap-3">
-            {sampleDocs.map((doc) => {
-              const isSelected = selectedSamples.includes(doc.id)
-              return (
-                <button
-                  key={doc.id}
-                  type="button"
-                  onClick={() => toggleSample(doc.id)}
-                  className={`relative border rounded-xl p-3 text-left cursor-pointer transition-colors
-                    ${isSelected
-                      ? 'border-[#1a5c6b] bg-teal-50/40'
-                      : 'border-gray-200 hover:border-gray-300 bg-white'
-                    }`}
-                >
-                  {/* Radio in top-right */}
-                  <div className="absolute top-3 right-3">
-                    <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${isSelected ? 'border-[#1a5c6b]' : 'border-gray-300'}`}>
-                      {isSelected && <div className="w-2 h-2 rounded-full bg-[#1a5c6b]" />}
+          {fetchingDocs ? (
+            <div className="flex justify-center items-center py-8">
+              <p className="text-gray-500 text-sm">Loading sample documents...</p>
+            </div>
+          ) : sampleDocs.length === 0 ? (
+            <div className="flex justify-center items-center py-8">
+              <p className="text-gray-500 text-sm">No sample documents available for this category.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-3">
+              {sampleDocs.map((doc) => {
+                const isSelected = selectedSamples.includes(doc.id)
+                return (
+                  <button
+                    key={doc.id}
+                    type="button"
+                    onClick={() => toggleSample(doc.id)}
+                    className={`relative border rounded-xl p-3 text-left cursor-pointer transition-colors
+                      ${isSelected
+                        ? 'border-[#1a5c6b] bg-teal-50/40'
+                        : 'border-gray-200 hover:border-gray-300 bg-white'
+                      }`}
+                  >
+                    {/* Radio in top-right */}
+                    <div className="absolute top-3 right-3">
+                      <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${isSelected ? 'border-[#1a5c6b]' : 'border-gray-300'}`}>
+                        {isSelected && <div className="w-2 h-2 rounded-full bg-[#1a5c6b]" />}
+                      </div>
                     </div>
-                  </div>
 
-                  <p className="font-semibold text-sm text-gray-900 pr-6">{doc.title}</p>
-                  <p className="text-xs text-gray-500 mt-1 leading-relaxed">{doc.desc}</p>
-                  <p className="text-xs text-gray-400 mt-2">PDF · {doc.pages} pages</p>
-                </button>
-              )
-            })}
-          </div>
+                    <p className="font-semibold text-sm text-gray-900 pr-6">{doc.title}</p>
+                    <p className="text-xs text-gray-500 mt-1 leading-relaxed">{doc.desc}</p>
+                    <p className="text-xs text-gray-400 mt-2">PDF · {doc.pages || 0} pages</p>
+                  </button>
+                )
+              })}
+            </div>
+          )}
         </div>
       )}
 
