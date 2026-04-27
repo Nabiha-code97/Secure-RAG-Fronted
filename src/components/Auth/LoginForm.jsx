@@ -47,14 +47,19 @@ const LoginForm = () => {
     setLoading(true)
     try {
       const data = await loginUser({ email, password })
-      // Backend returns 'access_token' in the response
-      if (data.access_token) {
+      // If user needs to complete onboarding, redirect to organization form
+      if (data.needs_onboarding && data.onboarding_token) {
+        setToken(data.onboarding_token)
+        setUser({ email })
+        toast.success('Email verified! Please complete your organization setup.')
+        navigate('/onboarding/category', { state: { email } })
+      } else if (data.access_token) {
         setToken(data.access_token)
         setUser({ email })
         toast.success('Signed in successfully!')
         navigate('/dashboard')
       } else {
-        throw new Error('No access token in response')
+        throw new Error('No token in response')
       }
     } catch (err) {
       toast.error(err.message || 'Login failed')
