@@ -5,7 +5,7 @@ import { logger } from '../utils/logger'
 
 const BASE_URL =
   import.meta.env.VITE_API_URL ||
-  'https://securerag-backend-new.onrender.com/api/v1'
+  'http://localhost:8000/api/v1'
 
 logger.info(`🚀 API Endpoint: ${BASE_URL}`)
 
