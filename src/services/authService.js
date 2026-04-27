@@ -192,12 +192,13 @@ export const saveWorkspace = ({ workspaceName }, token) =>
   )
 
 // ✅ Select Plan (Protected) - requires onboarding token
-export const selectPlan = ({ plan }, token) =>
+export const selectPlan = ({ plan, billingCycle }, token) =>
   request(
     '/auth/select-plan',
     'POST',
     {
       plan_name: plan.toLowerCase(),
+      billing_cycle: billingCycle || 'monthly',
     },
     token
   )

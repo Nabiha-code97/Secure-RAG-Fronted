@@ -56,17 +56,20 @@ const EmailVerifyForm = () => {
     setLoading(true)
     try {
       const data = await verifyEmail({ email, otp: code })
-      console.log('verifyEmail response:', data)
-      // Backend returns 'onboarding_token' for email verification
-      if (data.onboarding_token) {
-        setToken(data.onboarding_token)
-        toast.success('Email verified! Continue to next step.')
-        navigate('/onboarding/category', { state: { email } })
-      } else {
-        throw new Error('No onboarding token in response')
+      console.log('✅ Email verification response:', data)
+
+      if (!data.onboarding_token) {
+        console.error('❌ No onboarding token in response. Full response:', data)
+        throw new Error('Server did not return an onboarding token')
       }
+
+      setToken(data.onboarding_token)
+      console.log('✅ Token stored in context and localStorage')
+      toast.success('Email verified! Proceeding to next step.')
+      navigate('/onboarding/category', { state: { email } })
     } catch (err) {
-      toast.error(err.message || 'Invalid or expired code.')
+      console.error('❌ Email verification failed:', err.message)
+      toast.error(err.message || 'Invalid or expired code. Please try again.')
       setDigits(['', '', '', ''])
       inputRefs.current[0]?.focus()
     } finally {
