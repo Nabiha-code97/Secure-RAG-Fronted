@@ -17,8 +17,10 @@ const CATEGORIES = [
 const EMPLOYEE_OPTIONS = [
   '1-15',
   '16-49',
-  '50-249',
-  '250+',
+  '50-199',
+  '200-1999',
+  '2000-4999',
+  'just-me',
 ]
 
 const ChevronDown = ({ open }) => (
