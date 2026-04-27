@@ -65,8 +65,13 @@ const PlanSelection = () => {
   const handleSelectPlan = async (planName) => {
     setLoading(planName)
     try {
-      const data = await selectPlan({ plan: planName }, token)
-      // Store the access token from plan selection response
+      const data = await selectPlan(
+        {
+          plan: planName,
+          billingCycle: planName === 'Free' ? 'monthly' : billing,
+        },
+        token
+      )
       if (data.access_token) setToken(data.access_token)
       toast.success('Plan selected successfully!')
       navigate('/dashboard')
