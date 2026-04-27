@@ -4,7 +4,15 @@ import toast from 'react-hot-toast'
 import { saveOrganization } from '../../services/authService'
 import { useAppContext } from '../../context/AuthContext'
 
-const CATEGORIES = ['Healthcare', 'Finance & Banking', 'Government & NGO', 'Other']
+const CATEGORIES = [
+  'Healthcare',
+  'Finance & Banking',
+  'Government & NGO',
+  'Education',
+  'Technology',
+  'Retail',
+  'Other',
+]
 
 const EMPLOYEE_OPTIONS = [
   '1-15',
@@ -54,16 +62,21 @@ const CategoryForm = () => {
 
   const handleContinue = async () => {
     if (!category || !employeeCount) return
-    setLoading(true)
-    try {
-      await saveOrganization({ category, employeeCount }, token)
-    } catch (err) {
-      toast.error(err.message || 'Failed to save organization info.')
-      setLoading(false)
+    if (!token) {
+      toast.error('Session expired. Please verify your email again.')
       return
     }
-    setLoading(false)
-    navigate('/onboarding/workspace', { state: { email, category, employeeCount } })
+
+    setLoading(true)
+    try {
+      console.log('Saving organization:', { category, employeeCount, token: token?.slice(0, 10) + '...' })
+      await saveOrganization({ category, employeeCount }, token)
+      navigate('/onboarding/workspace', { state: { email, category, employeeCount } })
+    } catch (err) {
+      console.error('Organization save error:', err)
+      toast.error(err.message || 'Failed to save organization info.')
+      setLoading(false)
+    }
   }
 
   const canContinue = category && employeeCount
