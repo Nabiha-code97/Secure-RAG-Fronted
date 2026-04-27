@@ -97,7 +97,7 @@ const CategoryForm = () => {
     }
   }
 
-  const canContinue = category && employeeCount
+  const canContinue = category && employeeCount && (category !== 'Other' || customCategory.trim())
 
   return (
     <div className="w-full">
@@ -143,6 +143,15 @@ const CategoryForm = () => {
             </div>
           )}
         </div>
+        {category === 'Other' && (
+          <input
+            type="text"
+            placeholder="Enter your business category"
+            value={customCategory}
+            onChange={(e) => setCustomCategory(e.target.value)}
+            className="w-full mt-3 py-3 px-5 rounded-full border border-gray-300 bg-white text-sm outline-none focus:border-[#1a5c6b] transition-colors"
+          />
+        )}
       </div>
 
       {/* Q2: Employee Count */}
