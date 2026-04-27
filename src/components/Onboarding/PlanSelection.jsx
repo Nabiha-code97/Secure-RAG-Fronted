@@ -13,6 +13,7 @@ const CheckIcon = () => (
 const PLANS = [
   {
     name: 'Free',
+    value: 'free',
     tagline: 'Perfect for individuals trying SecureRAG for the first time.',
     monthlyPrice: 0,
     yearlyPrice: 0,
@@ -26,6 +27,7 @@ const PLANS = [
   },
   {
     name: 'Pro',
+    value: 'pro',
     tagline: 'For professionals and small teams who need more power and security.',
     monthlyPrice: 19,
     yearlyPrice: 15,
@@ -41,6 +43,7 @@ const PLANS = [
   },
   {
     name: 'Pro+',
+    value: 'pro_plus',
     tagline: 'For organizations with advanced security, compliance, and scale needs.',
     monthlyPrice: 32,
     yearlyPrice: 26,
@@ -62,13 +65,13 @@ const PlanSelection = () => {
   const state = location.state || {}
   const { token, setToken } = useAppContext()
 
-  const handleSelectPlan = async (planName) => {
-    setLoading(planName)
+  const handleSelectPlan = async (planValue) => {
+    setLoading(planValue)
     try {
       const data = await selectPlan(
         {
-          plan: planName,
-          billingCycle: planName === 'Free' ? 'monthly' : billing,
+          plan: planValue,
+          billingCycle: planValue === 'free' ? 'monthly' : billing,
         },
         token
       )
@@ -175,32 +178,32 @@ const PlanSelection = () => {
               {plan.name === 'Free' && (
                 <button
                   type="button"
-                  onClick={() => handleSelectPlan(plan.name)}
-                  disabled={loading === plan.name}
+                  onClick={() => handleSelectPlan(plan.value)}
+                  disabled={loading === plan.value}
                   className="w-full py-2.5 rounded-full text-sm font-semibold border border-gray-300 text-gray-800 hover:bg-gray-50 transition-colors disabled:opacity-60"
                 >
-                  {loading === plan.name ? 'Loading...' : 'Join Free'}
+                  {loading === plan.value ? 'Loading...' : 'Join Free'}
                 </button>
               )}
               {plan.name === 'Pro' && (
                 <button
                   type="button"
-                  onClick={() => handleSelectPlan(plan.name)}
-                  disabled={loading === plan.name}
+                  onClick={() => handleSelectPlan(plan.value)}
+                  disabled={loading === plan.value}
                   className="w-full py-2.5 rounded-full text-sm font-semibold text-white transition-opacity disabled:opacity-60"
                   style={{ background: 'linear-gradient(135deg, #1a5c6b, #0f3d48)' }}
                 >
-                  {loading === plan.name ? 'Loading...' : 'Join Pro'}
+                  {loading === plan.value ? 'Loading...' : 'Join Pro'}
                 </button>
               )}
               {plan.name === 'Pro+' && (
                 <button
                   type="button"
-                  onClick={() => handleSelectPlan(plan.name)}
-                  disabled={loading === plan.name}
+                  onClick={() => handleSelectPlan(plan.value)}
+                  disabled={loading === plan.value}
                   className="w-full py-2.5 rounded-full text-sm font-semibold bg-black text-white hover:bg-gray-900 transition-colors disabled:opacity-60"
                 >
-                  {loading === plan.name ? 'Loading...' : 'Join Pro+'}
+                  {loading === plan.value ? 'Loading...' : 'Join Pro+'}
                 </button>
               )}
             </div>
