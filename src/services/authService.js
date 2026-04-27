@@ -82,7 +82,7 @@ const request = async (endpoint, method = 'POST', body, token, isForm = false) =
       if (res.status >= 500) {
         if (attempt < maxRetries) {
           const delay = retryDelay * Math.pow(2, attempt) // Exponential backoff
-          logger.warn(`Server error ${res.status}, retrying in ${delay}ms...`)
+          logger.warning(`Server error ${res.status}, retrying in ${delay}ms...`)
           await new Promise(resolve => setTimeout(resolve, delay))
           continue // Retry
         }
@@ -100,7 +100,7 @@ const request = async (endpoint, method = 'POST', body, token, isForm = false) =
       if (err instanceof TypeError) {
         if (attempt < maxRetries) {
           const delay = retryDelay * Math.pow(2, attempt)
-          logger.warn(`Network error, retrying in ${delay}ms...`)
+          logger.warning(`Network error, retrying in ${delay}ms...`)
           await new Promise(resolve => setTimeout(resolve, delay))
           continue // Retry
         }
