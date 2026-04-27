@@ -12,7 +12,7 @@ const EMPLOYEE_OPTIONS = [
   '50-199',
   '200-1999',
   '2000-4999',
-  'Just me',
+  'just-me',
 ]
 
 const ChevronDown = ({ open }) => (
