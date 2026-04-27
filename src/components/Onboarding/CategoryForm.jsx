@@ -40,6 +40,7 @@ const RadioCircle = ({ selected }) => (
 
 const CategoryForm = () => {
   const [category, setCategory] = useState('')
+  const [customCategory, setCustomCategory] = useState('')
   const [employeeCount, setEmployeeCount] = useState('')
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -61,7 +62,13 @@ const CategoryForm = () => {
   }, [])
 
   const handleContinue = async () => {
+    const finalCategory = category === 'Other' ? customCategory : category
+
     if (!category || !employeeCount) return
+    if (category === 'Other' && !customCategory.trim()) {
+      toast.error('Please enter a business category.')
+      return
+    }
     if (!token) {
       toast.error('Session expired. Please verify your email again.')
       return
@@ -69,8 +76,8 @@ const CategoryForm = () => {
 
     setLoading(true)
     try {
-      console.log('Saving organization:', { category, employeeCount, token: token?.slice(0, 10) + '...' })
-      const result = await saveOrganization({ category, employeeCount }, token)
+      console.log('Saving organization:', { category: finalCategory, employeeCount, token: token?.slice(0, 10) + '...' })
+      const result = await saveOrganization({ category: finalCategory, employeeCount }, token)
       console.log('Organization saved successfully:', result)
       navigate('/onboarding/workspace', { state: { email, category, employeeCount } })
     } catch (err) {
