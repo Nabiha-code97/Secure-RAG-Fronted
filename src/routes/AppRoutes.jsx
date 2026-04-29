@@ -13,6 +13,7 @@ import Upload from '../pages/onboarding/Upload'
 import Plan from '../pages/onboarding/Plan'
 import NetworkTest from '../pages/NetworkTest'
 
+
 const AppRoutes = () => {
   return (
     <Routes>
