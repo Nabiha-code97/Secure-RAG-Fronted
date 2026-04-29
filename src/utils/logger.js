@@ -2,7 +2,7 @@
  * Browser-friendly logging utility
  * Logs to console with timestamps and formatting
  */
-
+// some comments added 
 const getTimestamp = () => {
   const now = new Date()
   return now.toLocaleTimeString('en-US', {
